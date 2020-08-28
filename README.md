@@ -31,3 +31,11 @@ localization/gnss_ntrip_client_node  |  会有对应的gnss_ntrip_client_node.IN
 localization/online_gnss_rtk_node  |  会有对应的online_gnss_rtk_node.INFO log文件
 localization/sensor_fusion_node  |  会有对应的sensor_fusion_node.INFO log文件
 localization/map_registration_node  |  会有对应的map_registration_node.INFO log文件
+
+
+
+第三个问题：docker是啥？如何使用？
+
+
+
+第四个问题：ros里面的tf到底指的是啥？
