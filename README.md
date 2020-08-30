@@ -17,6 +17,8 @@ setinstranslation ant2 1.05 0.45 1.22 0.10 0.10 0.10  # 这条语句表明，从
 
 1. 运行 inscalibrate align new 0.1
 
+default "Standard Deviation Threshold" for lever arm caibration is 0.5m. 杆臂值标定的默认误差是0.5m。
+
 敲命令 log inscalstatus onchanged
 
 当发现"9. Source Status"由 CALIBRATING 变成 CALIBRATED，就表明align的标定过程已经完成。
@@ -44,14 +46,84 @@ INS_CONVERGING  |  offset values就是初始的输入值。此时，calibration�
 
 运行inscalibrate align new 0.1，依次达到CALIBRATED时输出，
 
-1. （第一次）0  0  -73.7647 45 45 0.0999 CALIBRATED
-2. （第二次）0  0  -73.6808 45 45 0.2789 CALIBRATED
-3. （第三次）0  0  -82.4248 45 45 0.1614 CALIBRATED
-4. （第四次）0 -0  -90.2700 45 45 0.0897 CALIBRATED
-5. （第五次）0 -0  -90.4366 45 45 0.0927 CALIBRATED
+- （第一次）0  0  -73.7647 45 45 0.0999 CALIBRATED
+- （第二次）0  0  -73.6808 45 45 0.2789 CALIBRATED
+- （第三次）0  0  -82.4248 45 45 0.1614 CALIBRATED
+- （第四次）0 -0  -90.2700 45 45 0.0897 CALIBRATED
+- （第五次）0 -0  -90.4366 45 45 0.0927 CALIBRATED
+
+到第5次时，就认为已经完成了inscalibrate align new 0.1这个标定过程。
+
+2. 运行 inscalibrate rbv new 0.05
+
+default "Standard Deviation Threshold" rbv calibration is 0.5 degree. 默认的rbv标定的误差是0.5度。
+
+当输入 inscalibrate rbv stop时，屏幕上的打印由
+
+RBV 2.5550 0.6705 -0.3149 0.3036 2.1844 0.2195 CALIBRATING 1
+
+RBV 2.5550 0.6705 -0.3149 0.3036 2.1844 0.2195 INSUFFICIENT_SPEED 1
+
+变成了
+
+RBV 2.5550 0.6705 -0.3149 0.3036 2.1844 0.2195 CALIBRATED 1
+
+既输入 inscalibrate rbv stop后，输入 inscalibrate rbv add，继续标定
+
+再次输入 inscalibrate rbv stop，屏幕打印由
+
+RBV 2.3906 1.0029 -0.2068 0.4063 2.6315 0.3284 CALIBRATING 2
+
+RBV 2.3906 1.0029 -0.2068 0.4063 2.6315 0.3284 INSUFFICIENT_SPEED 2
+
+变成了
+
+RBV 2.4728 0.8367 -0.2609 0.2536 1.7100 0.1975 CALIBRATED 2
+
+再次输入 inscalibrate rbv add，继续标定，
+
+第三次输入inscalibrate rbv stop，屏幕打印由
+
+RBV 2.4727 0.3667 -0.0015 0.4285 1.9880 0.3114 CALIBRATING 3
+
+RBV 2.4727 0.3667 -0.0015 0.4285 1.9880 0.3114 INSUFFICIENT_SPEED 3
+
+变成了
+
+RBV 2.4728 0.6800 -0.1744 0.2213 1.3186 0.1677 CALIBRATED 3
+
+第三次输入 inscalibrate rbv add，继续标定，
+
+此时，屏幕上出现了第4次 CALIBRATED，如下，
+
+RBV 2.4753 0.5785 -0.2113 0.1724 1.0369 0.1292 CALIBRATED 4
+
+此时已经可以认为完成了rbv校准，前后的insconfig对比如下，
+
+执行rbv calibrate之前，
+
+![before rbv](imgs/gps_ins/insconfig_before_rbv_calibrate.png "before rbv")
+
+执行rbv calibrate之后，
+
+![after rbv](imgs/gps_ins/insconfig_after_rbv_calibrate1.png "after rbv")
+
+可以看到rbv结果已经由
+
+RBV IMUBODY 0 0 0 0 0 0 FROM_NVM
+
+变成了
+
+RBV IMUBODY 2.4753 0.5785 -0.2113 0.1724 1.0369 0.1292 CALIBRATED
+
+
+
+
 
 
 ## 制图
+
+
 
 
 
