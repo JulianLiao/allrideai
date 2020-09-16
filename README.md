@@ -26,7 +26,7 @@ default "Standard Deviation Threshold" for lever arm caibration is 0.5m. 杆臂�
 Source Status
 ----
 ASCII  |  Description
-----|----|----
+----|----
 CALIBRATING  |  offset values是在标定过程中给出的
 CALIBRATED  |  offset values是在标定过程完成后给出的
 INS_CONVERGING  |  offset values就是初始的输入值。此时，calibration过程还没开始，直到ins solution是converged，calibration过程才真正开始
