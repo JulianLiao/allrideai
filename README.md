@@ -4,22 +4,75 @@
 
 ### PP7坐标系
 
-PP7坐标系已经画在设备上了，一般是x向右，y向前。不管怎么安装pp7，x指的方向就是pp7 imu的x轴，y指的方向就是pp7 imu的y轴。不同的安装角度，影响的是pp7和lidar坐标系的旋转角度，以及pp7和车体坐标系的旋转角度。
+![PP7 coordinate](imgs/gps_ins/pp7_coordinates/pp7_coord.jpg "PP7 coordinate")
+
+PP7坐标系已经画在设备上了，x向右，y向前，z向上。关于原点，其实原点肯定只有一个，在设备里面。上图中，其实也清晰地画出了imu x/y/z的原点。不管怎么安装pp7，x指的方向就是pp7 imu的x轴，y指的方向就是pp7 imu的y轴。不同的安装角度，影响的是外参，影响的是pp7和lidar坐标系的旋转角度，以及pp7和车体坐标系的旋转角度。
+
+当在POD4上安装PP7 和 Lidar-32，用作地图车时，PP7的坐标系是: x向右，y向前，z向上。
+
+当在Hunter上安装PP7 和 Lidar-32，用作地图车时，PP7的坐标系是: x向右，y向前，z向上。
+
 
 
 ## 标定
 
-当在POD4上安装PP7和Lidar-32，用作地图车时，PP7的坐标系：x向右，y向前，z向上。
+### (ins 和 rtk 的标定)  /  GNSS/INS Calibration  /  NovAtel Calibration(ANT1, ALIGN, RBV)
+
+#### 1. 双天线到ins杆臂值标定
+
+需要登录到NovAtel，有以下两种方法都可以登录到NovAtel终端，
+
+- telnet 192.168.8.60 3004
+- 在浏览器中输入"192.168.8.60"，点击右上角的设置图标，打开浏览器版的终端
+
+所有车辆的杆臂值采用手动测量。
+
+```bash
+# set level-arm and std value for dual-ant
+# tx/ty/tz的单位是meter，std_tx/std_ty/std_tz为标准差，需要控制在0.03 ~ 0.05m。
+setinstranslation ant1 tx ty tz std_tx std_ty std_tz （左天线杆臂值，默认为主天线）
+setinstranslation ant2 tx ty tz std_tx std_ty std_tz  (右天线杆臂值)
+saveconfig
+这些数据会被写入到NovAtel存储器里，也就是NVM。
+
+在<OEM7_Commands_Logs_Manual.pdf>，'4.7 INSCALIBRATE'，'SDThreshold'，有这样一句话"default Standard Deviation Threshold for lever arm calibration = 0.1m"。
+
+比如，在POD4上，
 
 setinstranslation ant1 -0.15 0.45 1.22 0.10 0.10 0.10  # 这条语句表明，主天线在PP7坐标系下的位置是：左边0.15m，前边0.45m，上方1.22m，x/y/z三个方向上允许的误差范围均是0.1m。
 
 setinstranslation ant2 1.05 0.45 1.22 0.10 0.10 0.10  # 这条语句表明，从天线在PP7坐标系下的位置是：右边1.05m，前方0.45m，上方1.22m，x/y/z三个方向上允许的误差范围均是0.1m。
 
-1. 运行 inscalibrate align new 0.1
+在Hunter上，
 
-default "Standard Deviation Threshold" for lever arm caibration is 0.5m. 杆臂值标定的默认误差是0.5m。
+setinstranslation ant1 -0.26 -0.04 0.115 0.05 0.05 0.05  # 这条语句表明，Hunter小车上，主天线在PP7坐标系下的位置：-0.26m, -0.04m, 0.115m。x/y/z三个方向上允许的误差范围是0.05m。
+setinstranslation ant2 -0.26 0.88 0.23 0.05 0.05 0.05  # 这条语句表明，Hunter小车上，从天线在PP7坐标系下的位置：-0.26m, 0.88m, 0.23m。x/y/z三个方向上允许的误差范围是0.05m。
+```
 
-敲命令 log inscalstatus onchanged
+#### 2. 设置输出原点(output origin)，也就是user输出为ins位置
+
+```bash
+setinstranslation user 0 0 0 0 0 0  # 这条语句应该会打印 OK message
+setinsrotation user 0 0 0 0 0 0  # 这条语句应该会打印 OK message
+saveconfig
+```
+
+#### 3. ALIGN标定（ins 和 rtk之间的标定）
+
+ALIGN标定的结果是写在了 _config_gnss.cfg_
+
+标定过程可在车体静止下完成，也可以将车体绕8字完成。建议先将车体绕8字绕个1分钟左右，之后静止直至达到收敛条件。
+
+做ALIGN标定的前提条件： /novatel_data/inspvax的"position_type" = 56(RTK_FIXED)，同时"ins_status" = 3(SOLUTION_GOOD)，通常通过将车绕8字来达到此状态。
+
+登录到NovAtel终端，telnet 192.168.8.60 3004 或者登录网页版，启动ALIGN标定，
+
+```bash
+# std是用来设置收敛条件的，单位是degree，建议设为0.1 degree，更小的std较难收敛。
+inscalibrate align new 0.1
+log inscalstatus onchanged  # 查看标定状态更新
+saveconfig  # 将标定结果写入NVM存储器
+```
 
 当发现"9. Source Status"由 CALIBRATING 变成 CALIBRATED，就表明align的标定过程已经完成。
 
@@ -29,7 +82,7 @@ ASCII  |  Description
 ----|----
 CALIBRATING  |  offset values是在标定过程中给出的
 CALIBRATED  |  offset values是在标定过程完成后给出的
-INS_CONVERGING  |  offset values就是初始的输入值。此时，calibration过程还没开始，直到ins solution是converged，calibration过程才真正开始
+INS_CONVERGING  |  offset values就是初始的输入值。此时，calibration过程还没开始，ins solution还在收敛的过程中，直到ins solution是converged，calibration过程才真正开始
 
 
 ![align calibrate](imgs/gps_ins/align_calibrate_complete.png "align calibrate")
@@ -54,9 +107,39 @@ INS_CONVERGING  |  offset values就是初始的输入值。此时，calibration�
 
 到第5次时，就认为已经完成了inscalibrate align new 0.1这个标定过程。
 
-2. 运行 inscalibrate rbv new 0.05
+如果很难收敛到设定角度，达到一定角度时，可以敲命令 inscalibrate align stop，此时屏幕打印的align标定的状态会由Calibrating变为Calibrated，如果满足要求的话，此时同样可以认为完成了inscalibrate align。
 
-default "Standard Deviation Threshold" rbv calibration is 0.5 degree. 默认的rbv标定的误差是0.5度。
+**注意**：屏幕打印由Calibrating变成Calibrated，只能说明完成了ALIGN标定这个过程，但是标定结果是否能用，可以从以下两个方面来考量。
+
+其一，观察绕z轴的旋转角度，对于POD4，目前看到的这个角度应该是接近-90deg;而对于HUNTER，这个角度应该是接近0deg。对于POD4，如果由Calibrating变为Calibrated时，这个角度是-73.7647deg，与-90deg参考值相差较大时，则说明这一次Align标定虽然完成了，但结果并不理想，还需要继续运行 inscalibrate align new 0.1直至绕z轴的旋转角度接近-90deg为止。
+
+![z rotation](imgs/gps_ins/z_rotation_on_POD4_and_HUNTER.jpg "z rotation")
+
+其二，查看dualantenna heading与inspvax的azimuth是否一致，如果相差较大，同样说明结果不满足要求，还需要继续执行 inscalibrate align new 0.1直至这两个角度比较一致为止。此外，还有一种查看角度值的方法，就是先把车摆向正北方向（用手机指南针做参考），查看此时dualantenna heading与inspvax的azimuth是否是接近于0deg或者360deg。
+
+关于如何查看dualantenna heading，可以在NovAtel terminal里，输入log dualantennaheading once来查看，也可以在IPC上通过rostopic echo /novatel_data/dualantennaheading来查看。
+
+#### 4. RBV标定（ins 和 vehicle之间的标定）
+
+RBV标定结果是写在了 _config_imu.cfg_
+
+做RBV标定的前提条件： /novatel_data/inspvax的"position_type" = 56(RTK_FIXED)，同时"ins_status" = 3(SOLUTION_GOOD)，通常通过将车绕8字来达到此状态。
+
+做RBV标定的要求：
+- 标定过程需要在一条300 - 500米平坦道路进行，行驶过程中避免方向变化
+- 最好道路可以逆行，从一端开始，驶向另一端，如果到终点时已经收敛到目标角度那最好了，但是如果到终点时还没有收敛到目标角度，那么应该先运行inscalibrate rbv stop手动终止，掉头后，运行inscalibrate rbv add继续标定
+
+登录到NovAtel终端，telnet 192.168.8.60 3004 或者登录网页版，启动RBV标定，
+
+```bash
+# std是用来设置收敛条件的，单位是degree，建议设为0.05 degree，更小的std较难收敛。
+inscalibrate rbv new 0.05
+log inscalstatus onchanged  # 查看标定状态更新
+inscalibrate rbv stop  # 手动停止标定，此时屏幕打印的标定状态应该由Calibrating 变成Calibrated。
+inscalibrate rbv add  # 继续标定
+saveconfig  # 将标定结果写入存储器
+在<OEM7_Commands_Logs_Manual.pdf>，'4.7 INSCALIBRATE'，'SDThreshold'，有这样一句话"default Standard Deviation Threshold for RBV calibration = 0.5degrees"。
+```
 
 当输入 inscalibrate rbv stop时，屏幕上的打印由
 
@@ -92,9 +175,7 @@ RBV 2.4727 0.3667 -0.0015 0.4285 1.9880 0.3114 INSUFFICIENT_SPEED 3
 
 RBV 2.4728 0.6800 -0.1744 0.2213 1.3186 0.1677 CALIBRATED 3
 
-第三次输入 inscalibrate rbv add，继续标定，
-
-此时，屏幕上出现了第4次 CALIBRATED，如下，
+第三次输入 inscalibrate rbv add，继续标定，同时
 
 RBV 2.4753 0.5785 -0.2113 0.1724 1.0369 0.1292 CALIBRATED 4
 
@@ -116,8 +197,7 @@ RBV IMUBODY 0 0 0 0 0 0 FROM_NVM
 
 RBV IMUBODY 2.4753 0.5785 -0.2113 0.1724 1.0369 0.1292 CALIBRATED
 
-
-
+#### 5. Lidar和IMU的外参标定 / Lidar - INS
 
 
 
