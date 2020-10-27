@@ -119,9 +119,11 @@ INS_CONVERGING  |  offset values就是初始的输入值。此时，calibration�
 
 关于如何查看dualantenna heading，可以在NovAtel terminal里，输入log dualantennaheading once来查看，也可以在IPC上通过rostopic echo /novatel_data/dualantennaheading来查看。
 
-#### 4. RBV标定（ins 和 vehicle之间的标定）
+### RBV标定（ins 和 vehicle之间的标定）
 
 RBV标定结果是写在了 _config_imu.cfg_
+
+RBV标定其实是在标定imu与车体之间的角度偏差, for IMU angle offset from vehicle body
 
 做RBV标定的前提条件： /novatel_data/inspvax的"position_type" = 56(RTK_FIXED)，同时"ins_status" = 3(SOLUTION_GOOD)，通常通过将车绕8字来达到此状态。
 
@@ -197,7 +199,37 @@ RBV IMUBODY 0 0 0 0 0 0 FROM_NVM
 
 RBV IMUBODY 2.4753 0.5785 -0.2113 0.1724 1.0369 0.1292 CALIBRATED
 
-#### 5. Lidar和IMU的外参标定 / Lidar - INS
+### Lidar和IMU的外参标定 / Lidar - INS
+
+注意事项：
+- 直接把那些config文件都放在/opt/allride/data/localization/config下，不要有P001或者H001这样的子文件夹.
+
+错误的放置方法：
+![No subdirectory](imgs/ins-vehicle/no_need_subdirectory_Hunter001.png "No subdirectory")
+
+正确的放置方法：
+![under config directly](imgs/ins-vehicle/put_carconfig_under_config_directly.png "under config directly")
+
+遇到的问题有：
+
+#### 1. lidar odom没有运行，result目录 和 lidar_odom.log都是空的
+
+![odom not running](imgs/ins-vehicle/lidar_odom_not_running.png "odom not running")
+
+通过tail -f lidar_odom.log深入进去看，发现了一下错误：
+
+"Unable to contact my own server at [http://192.168.8.100:37161]. This usually means that the network is not configured properly. A common cause is that the machine cannot ping itself."
+
+![odom network err](imgs/ins-vehicle/lidar_odom_network_err.png "odom network err")
+
+此时，ifconfig查看发现根本就不存在 192.168.8.100这样一个ip，如下：
+
+![check ifconfig](imgs/ins-vehicle/check_ifconfig.png "check ifconfig")
+
+需要将ROS_HOSTNAME=192.168.8.100改成ROS_HOSTNAME=localhost。
+
+继续运行，碰到报错，"ProtoIO: failed to open file(RD): /opt/allride/data/localization/config/map_layer_dictionary.cfg"，该问题就是由于将config文件放到了Hunter001这样的子文件夹下了，而不是直接放到了/opt/allride/data/localization/config目录下造成的。
+
 
 
 
