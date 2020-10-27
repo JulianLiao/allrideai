@@ -263,6 +263,27 @@ topic | 备注
 - docker exec -it drv_node bash
 - source devel/setup.bash
 
+### [rostopic echo /novatel_data/bestpos]
+
+输出示例：
+
+![bestpos](imgs/gps_ins/bestpos_sample_output.png "bestpos")
+
+参见文件novatel_msgs/BESTPOS.msg，
+
+solution_status
+----
+value | ASCII | solution_status | definition | description
+----|----|----|----|----
+0  |  SOL_COMPUTED  |  SOL_COMPUTED  |  uint32 SOLUTION_STATUS_SOLUTION_COMPUTED=0  |  Solution computed
+
+position_type
+----
+value | ASCII | position_type | definition | description
+----|----|----|----|----
+49  |  WIDE_INT  |  WIDE_INT  |  uint32 POSITION_TYPE_WIDE_INT=49  |  Multi-frequency RTK solution with carrier phase ambiguities resolved to wide-lane integers
+50  |  NARROW_INT  |  NARROW_INT  |  uint32 POSITION_TYPE_NARROW_INT=50  |  Multi-frequency RTK solution with carrier phase ambiguities resolved to narrow-lane integers
+
 
 ### [rostopic echo /novatel_data/inspvax]
 
