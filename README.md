@@ -1,8 +1,6 @@
-# allrideai
+# 坐标系
 
-## 坐标系
-
-### PP7坐标系
+## PP7坐标系
 
 ![PP7 coordinate](imgs/gps_ins/pp7_coordinates/pp7_coord.jpg "PP7 coordinate")
 
@@ -12,9 +10,9 @@ PP7坐标系已经画在设备上了，x向右，y向前，z向上。关于原�
 
 当在Hunter上安装PP7 和 Lidar-32，用作地图车时，PP7的坐标系是: x向右，y向前，z向上。
 
+# 标定
 
-
-## 标定
+## 地图车标定  /  Lidar-32 + PP7D
 
 ### (ins 和 rtk 的标定)  /  GNSS/INS Calibration  /  NovAtel Calibration(ANT1, ALIGN, RBV)
 
@@ -230,13 +228,31 @@ RBV IMUBODY 2.4753 0.5785 -0.2113 0.1724 1.0369 0.1292 CALIBRATED
 
 继续运行，碰到报错，"ProtoIO: failed to open file(RD): /opt/allride/data/localization/config/map_layer_dictionary.cfg"，该问题就是由于将config文件放到了Hunter001这样的子文件夹下了，而不是直接放到了/opt/allride/data/localization/config目录下造成的。
 
+解决了上面2个问题，就可以顺利地走完./start_calibration.sh的pipeline，当脚本运行完成后，会在/opt/allride/data/calibration/result目录下生成以下4个文件，
+
+![Lidar-ins result](imgs/ins-lidar/calibration_result.png "Lidar-ins result")
+
+我们需要用代表标定结果的这4个文件替换原来的/opt/allride/data/calibration/config下同样名字的4个文件。至此，地图车的标定结束。
 
 
+## 普通车标定  /  Lidar-16 + oem718d
 
-## 制图
+因为没有ins，可以基于地图来做标定，会更加的简单。
 
 
+# 制图
 
+遇到的问题有：
+
+## 1. 提示"REQUIRED process [multi_sensor_odometry_node-2] has died!", "Initiating shutdown"
+
+如下图所示，当运行./start_ndt_mapping.sh后，再处理玩mapping configures后，就会去执行"Processing lidar odometry..."，当要执行完成"lidar odometry"时，通过tail -f /opt/allride/data/mapping/data/loc_mapping_2020-10-24-12-28-12/lidar_odometry.log可以看到如下的错误提示（红色部分），
+
+![running lidar odom](imgs/mapping_pipeline/mapping_pipeline_processing_lidar_odom.png "running lidar odom")
+
+![finish lidar odom](imgs/mapping_pipeline/imgs/mapping_pipeline/finish_lidar_odom_tips.png "finish lidar odom")
+
+备注："REQUIRED process [multi_sensor_odometry_node-2] has died!", "Initiating shutdown"是正常退出lidar odom的提示。
 
 
 ## ros topics
@@ -309,7 +325,8 @@ value | ASCII | position_type | definition | description
 ----|----|----|----|---
 53  |  INS_PSRSP  |  PSEUDORANGE_SINGLE_POINT  |  uint32 POSITION_TYPE_PSEUDORANGE_SINGLE_POINT=53  |  single point
 54  |  INS_PSRDIFF  |  PSEUDORANGE_DIFFERENTIAL  |  uint32 POSITION_TYPE_PSEUDORANGE_DIFFERENTIAL=54  |  INS pseudorange differential solution（伪距差分）
-56  |  INS_RTKFIXED  |  RTK_FIXED  |  uint32 POSITION_TYPE_RTK_FIXED=56  |  INS RTK fixed ambiguities solution
+55  |  INS_RTKFLOAT  |  RTK_FLOAT  |  uint32 POSITION_TYPE_RTK_FLOAT=55  |  floating ambiguity RTK solution，可能是L1_FLOAT或者NARROW_FLOAT solution
+56  |  INS_RTKFIXED  |  RTK_FIXED  |  uint32 POSITION_TYPE_RTK_FIXED=56  |  INS RTK fixed ambiguities solution，可能是L1_INT，WIDE_INT或者NARROW_INT solution
 
 
 ## commands on pp7
