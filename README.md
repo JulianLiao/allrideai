@@ -1,6 +1,6 @@
 # 坐标系
 
-## PP7坐标系
+## PP7坐标系  /  ins坐标系
 
 ![PP7 coordinate](imgs/gps_ins/pp7_coordinates/pp7_coord.jpg "PP7 coordinate")
 
@@ -9,6 +9,28 @@ PP7坐标系已经画在设备上了，x向右，y向前，z向上。关于原�
 当在POD4上安装PP7 和 Lidar-32，用作地图车时，PP7的坐标系是: x向右，y向前，z向上。
 
 当在Hunter上安装PP7 和 Lidar-32，用作地图车时，PP7的坐标系是: x向右，y向前，z向上。
+
+## map坐标系
+
+frame_id: /map
+
+## Lidar坐标系
+
+frame_id: /velodyne_32 或者 /velodyne_16_F
+
+## 车体坐标系
+
+frame_id: /base_link
+
+## tf
+
+### lidar-imu
+
+lidar.cfg定义了Tx_vehicle_lidar，lidar坐标系在vehicle坐标系下的位姿。
+
+config_imu.cfg定义了Tx_vehicle_imu，imu坐标系在vehicle坐标系下的位姿。
+
+Tx_imu_lidar = [Tx_vehicle_imu]^T * Tx_vehicle_lidar.
 
 # 标定
 
@@ -58,6 +80,9 @@ saveconfig
 #### 3. ALIGN标定（ins 和 rtk之间的标定）
 
 ALIGN标定的结果是写在了 _config_gnss.cfg_
+
+NovAtel操作key: 在开阔地段启动，在尽量开阔的地方绕行，能够缩短收敛时间。
+
 
 标定过程可在车体静止下完成，也可以将车体绕8字完成。建议先将车体绕8字绕个1分钟左右，之后静止直至达到收敛条件。
 
@@ -328,7 +353,11 @@ position_type
 value | ASCII | position_type | definition | description
 ----|----|----|----|----
 49  |  WIDE_INT  |  WIDE_INT  |  uint32 POSITION_TYPE_WIDE_INT=49  |  Multi-frequency RTK solution with carrier phase ambiguities resolved to wide-lane integers
-50  |  NARROW_INT  |  NARROW_INT  |  uint32 POSITION_TYPE_NARROW_INT=50  |  Multi-frequency RTK solution with carrier phase ambiguities resolved to narrow-lane integers
+50  |  NARROW_INT  |  NARROW_INT  |  uint32 POSITION_TYPE_NARROW_INT=50  |  Multi-frequency RTK solution with carrier phase ambiguities resolved to narrow-lane integers，RTK位置精度是在厘米级别，实际例子见bestpos_positiontype50实际例子1，latitude_std: 0.011618m，ongitude_std: 0.013968m，厘米级别
+
+bestpos_positiontype50实际例子1：
+
+![bestpos_positiontype50](imgs/commands/bestpos_positiontype50_sample.jpg "bestpos_positiontype50")
 
 
 ## [rostopic echo /novatel_data/inspvax]
@@ -354,10 +383,13 @@ position_type
 value | ASCII | position_type | definition | description
 ----|----|----|----|---
 53  |  INS_PSRSP  |  PSEUDORANGE_SINGLE_POINT  |  uint32 POSITION_TYPE_PSEUDORANGE_SINGLE_POINT=53  |  single point
-54  |  INS_PSRDIFF  |  PSEUDORANGE_DIFFERENTIAL  |  uint32 POSITION_TYPE_PSEUDORANGE_DIFFERENTIAL=54  |  INS pseudorange differential solution（伪距差分）
-55  |  INS_RTKFLOAT  |  RTK_FLOAT  |  uint32 POSITION_TYPE_RTK_FLOAT=55  |  floating ambiguity RTK solution，可能是L1_FLOAT或者NARROW_FLOAT solution
-56  |  INS_RTKFIXED  |  RTK_FIXED  |  uint32 POSITION_TYPE_RTK_FIXED=56  |  INS RTK fixed ambiguities solution，可能是L1_INT，WIDE_INT或者NARROW_INT solution
+54  |  INS_PSRDIFF  |  PSEUDORANGE_DIFFERENTIAL  |  uint32 POSITION_TYPE_PSEUDORANGE_DIFFERENTIAL=54  |  INS pseudorange differential solution（伪距差分），实际例子见inspvax_position_type54实际例子1，latitude_std: 0.323787m，分米级别
+55  |  INS_RTKFLOAT  |  RTK_FLOAT  |  uint32 POSITION_TYPE_RTK_FLOAT=55  |  floating ambiguity RTK solution，可能是L1_FLOAT或者NARROW_FLOAT solution，RTK std是在分米级
+56  |  INS_RTKFIXED  |  RTK_FIXED  |  uint32 POSITION_TYPE_RTK_FIXED=56  |  INS RTK fixed ambiguities solution，可能是L1_INT，WIDE_INT或者NARROW_INT solution，RTK std是在厘米级，RTK位置精度在厘米级
 
+inspvax_position_type54实际例子1：
+
+![inspvax_positiontype54](imgs/commands/inspvax_positiontype54_sample.jpg "inspvax_positiontype54")
 
 # commands on pp7
 
