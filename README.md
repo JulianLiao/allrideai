@@ -121,7 +121,7 @@ INS_CONVERGING  |  offset values就是初始的输入值。此时，calibration�
 
 RBV标定结果是写在了 _config_imu.cfg_
 
-RBV标定其实是在标定imu与车体之间的角度偏差, for IMU angle offset from vehicle body
+RBV标定其实是在标定imu的y轴与车体前进方向之间的夹角, for IMU angle offset from vehicle body
 
 做RBV标定的前提条件： /novatel_data/inspvax的"position_type" = 56(RTK_FIXED)，同时"ins_status" = 3(SOLUTION_GOOD)，通常通过将车绕8字来达到此状态。
 
@@ -260,11 +260,11 @@ carconfig_branch=demo_hunter 和 carconfig_version=0.0.438，在结合/etc/profi
 
 ## 1. 提示"REQUIRED process [multi_sensor_odometry_node-2] has died!", "Initiating shutdown"
 
-如下图所示，当运行./start_ndt_mapping.sh后，再处理玩mapping configures后，就会去执行"Processing lidar odometry..."，当要执行完成"lidar odometry"时，通过tail -f /opt/allride/data/mapping/data/loc_mapping_2020-10-24-12-28-12/lidar_odometry.log可以看到如下的错误提示（红色部分），
+如下图所示，当运行./start_ndt_mapping.sh后，在处理玩mapping configures后，就会去执行"Processing lidar odometry..."，当要执行完成"lidar odometry"时，通过tail -f /opt/allride/data/mapping/data/loc_mapping_2020-10-24-12-28-12/lidar_odometry.log可以看到如下的错误提示（红色部分），
 
 ![running lidar odom](imgs/mapping_pipeline/mapping_pipeline_processing_lidar_odom.png "running lidar odom")
 
-![finish lidar odom](imgs/mapping_pipeline/imgs/mapping_pipeline/finish_lidar_odom_tips.png "finish lidar odom")
+![finish lidar odom](imgs/mapping_pipeline/finish_lidar_odom_tips.png "finish lidar odom")
 
 备注："REQUIRED process [multi_sensor_odometry_node-2] has died!", "Initiating shutdown"是正常退出lidar odom的提示。
 
