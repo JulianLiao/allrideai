@@ -234,6 +234,20 @@ RBV IMUBODY 2.4753 0.5785 -0.2113 0.1724 1.0369 0.1292 CALIBRATED
 
 我们需要用代表标定结果的这4个文件替换原来的/opt/allride/data/calibration/config下同样名字的4个文件。至此，地图车的标定结束。
 
+对于所有/opt/allride/data/calibration/config目录下的文件，应给一个版本号，例如0.0.438，将其上传到 oss://allride-release/carconfig相关的目录下。
+
+H001的config目录： oss://allride-release/carconfig/demo/hunter/0.0.438/H001
+
+P001的config目录： oss://allride-release/carconfig/demo/perceptin_setup/0.0.388/P001
+
+P12的config目录： oss://allride-release/carconfig/demo/perceptin_setup/0.0.388/P12
+
+看下H001 IPC上的product/version.ini，如下，
+
+![IPC map version](imgs/mapping_pipeline/version.ini.png "IPC map version")
+
+carconfig_branch=demo_hunter 和 carconfig_version=0.0.438，在结合/etc/profile "export CAR_NAME=H001"，把上面3个条件组合到一起，就表明H001这台车用的carconfig在oss服务器上的路径是 oss://allride-release/carconfig/demo/hunter/0.0.438/H001。
+
 
 ## 普通车标定  /  Lidar-16 + oem718d
 
@@ -254,8 +268,24 @@ RBV IMUBODY 2.4753 0.5785 -0.2113 0.1724 1.0369 0.1292 CALIBRATED
 
 备注："REQUIRED process [multi_sensor_odometry_node-2] has died!", "Initiating shutdown"是正常退出lidar odom的提示。
 
+对于IPC而言，地图和config一样都可以从oss上pull下来。
 
-## ros topics
+对于跑完mapping pipeline生成的两个*.mdb(data.mdb 和 lock.mdb)，应该给一个版本号并将其上传到 oss://allride-release/localization目录下。(Generally we tag map data with a version code and upload it to oss://allride-release/localization/, for version control and automatically setup).
+
+![localcation mdb put](imgs/mapping_pipeline/location_mdb_files_put.png "localcation mdb put")
+
+如下图所示，2.0.x代表深圳的地图，具体2.0.3就是大学城益田假日里背面停车场于2020-10-24采集的地图bag所建的地图。
+
+![oss map version](imgs/mapping_pipeline/map_version.png "oss map version")
+
+看下H001 IPC上的product/version.ini，如下，
+
+![IPC map version](imgs/mapping_pipeline/version.ini.png "IPC map version")
+
+上图中version.ini中的loc_version=2.0.3用的就是oss://allride-release/localization/2.0.3。
+
+
+# ros topics
 
 
 topic | 备注
@@ -279,7 +309,7 @@ topic | 备注
 - docker exec -it drv_node bash
 - source devel/setup.bash
 
-### [rostopic echo /novatel_data/bestpos]
+## [rostopic echo /novatel_data/bestpos]
 
 输出示例：
 
@@ -301,7 +331,7 @@ value | ASCII | position_type | definition | description
 50  |  NARROW_INT  |  NARROW_INT  |  uint32 POSITION_TYPE_NARROW_INT=50  |  Multi-frequency RTK solution with carrier phase ambiguities resolved to narrow-lane integers
 
 
-### [rostopic echo /novatel_data/inspvax]
+## [rostopic echo /novatel_data/inspvax]
 
 输出示例：
 
@@ -310,7 +340,7 @@ value | ASCII | position_type | definition | description
 重点关注ins_status和position_type
 
 参见文件novatel_msgs/INSPVAX.msg，可以看到
-## ros topics
+
 ins_status
 ----
 value | ASCII | ins_status | definition | description
@@ -329,12 +359,12 @@ value | ASCII | position_type | definition | description
 56  |  INS_RTKFIXED  |  RTK_FIXED  |  uint32 POSITION_TYPE_RTK_FIXED=56  |  INS RTK fixed ambiguities solution，可能是L1_INT，WIDE_INT或者NARROW_INT solution
 
 
-## commands on pp7
+# commands on pp7
 
 通过以下指令登录到pp7，
 - telnet 192.168.8.60 3004
 
-### log insconfig
+## log insconfig
 
 输出示例：
 
@@ -345,7 +375,7 @@ value | ASCII | position_type | definition | description
 ANT1  |  从IMU中心到主天线相位中心的平移量
 ANT2  |  从IMU中心到从天线相位中心的平移量
 
-### setinstranslation
+## setinstranslation
 
 1. setinstranslation user 0 0 0 0 0 0        # 把ins输出设置到ins中心点
 
