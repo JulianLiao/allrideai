@@ -1,3 +1,119 @@
+# GNSS
+
+
+## Npos220
+
+Npos与IPC正常的连接是：
+
+![Npos IPC connection](imgs/npos/connection_between_Npos_and_IPC.jpg "Npos IPC connection")
+
+Npos220区分4G主站com1 和 从站com1。
+
+其中，4G主站com1如下，
+
+主站COM1之前已通过命令 "serialconfig com1 115200"配置成了115200的波特率。
+
+![master com1](imgs/npos/4g_master_com1.jpg "master com1")
+
+如果在主站com1输入log comconfig，（也就是将主站com1连至IPC的COM2，然后打开/dev/ttyS1）是没有任何相应的。
+
+由于对主站com1进行了输出的配置，如下，
+
+```bash
+log com1 gpgga ontime 1
+log com1 gprmc ontime 1
+```
+
+于是，gpgga 和 gprmc均是以1s的周期在发送，如下，
+
+!["mastercom1 gpgga"](imgs/npos/gpgga_output_at_1sec_interval.PNG "mastercom1 gpgga")
+
+!["mastercom1 gpgga"](imgs/npos/gprmc_output_at_1sec_interval.PNG "mastercom1 gprmc")
+
+从站com1如下：
+
+![rovercom1](imgs/npos/rovercom1.jpg "rovercom1")
+
+同时还有主站com3（连接至IPC的com1口，所以会被映射成/dev/ttyS0），如下，
+
+![master com3](imgs/npos/mastercom3.jpg "master com3")
+
+在/dev/ttyS0，输入log loglist，其输出如下，
+
+![master com3](imgs/npos/mastercom3_loglist.PNG "master com3")
+
+
+
+
+
+### 问题1，inspvaxa消息里ins的状态无法到ins_solution_good 和 ins_rtkfixed
+
+ins_solution一直处于 ins_aligning, motion_detect（这是车动起来的标识）, waiting_azimuth（因为双天线的heading始终是0，所以这里显示waiting_azimuth是可以理解的）的状态，就是到不了ins_solution_good的状态。
+
+position_type则一直是"PSRDIFF"的状态。
+
+先静态，等状态变成"INS_ALIGNMENT_COMPLETE"，然后再绕‘8’字收敛到INS_SOLUTION_GOOD。
+
+有一点需要注意：由于当时双天线的heading始终是0，所以就不能用双天线初始化，需要用自动方式。
+
+
+
+### 问题2，双天线的heading始终为0
+
+![heading3A is 0](imgs/npos/dualantenna_heading_is_always_0.png "heading3A is 0")
+
+当遇到这个问题的时候，首先要用从站com1替换主站com1，连接到IPC的com2口，然后输以下3个命令来查看从站com1的三个方面的信息，
+
+第一方面，查看授权码
+
+当把从站com1接到工控机的COM2后，其会被映射成/dev/ttyS1，波特率为9600，需要对其授权方可以使用，可以通过命令 log authcodes来查看授权码，
+
+当没有进行授权时，查看到的授权码如下，
+
+![no authcodes for rovercom1](imgs/npos/no_authcodes_for_rovercom1.png "no authcodes for rovercom1")
+
+将从站com1连至IPC的COM2后，使用sudo cutecom打开/dev/ttyS1，波特率选择9600，使用以下命令对从站com1进行授权，
+
+```bash
+AUTH ZHT63F,G4NT9R,FTFM93,HZ5RGN,NT8TKT,CDNLZN5NN
+```
+
+完成授权后，再次通过log authcodes查看授权码，
+
+![auth finish for rovercom1](imgs/npos/rovercom1_auth_finish.png "auth finish for rovercom1")
+
+成功给从站com1授权后，就有了双天线的heading信息了。此时需要把主站com1口再接回到IPC的COM2口，也就是恢复Npos和IPC的正常连接。
+
+第二方面，通过命令 log comconfig查看com口的配置
+
+首先，通过以下指令来设置主站(masterport) 和 从站(roverport)之间的align。
+
+```bash
+insalignconfig com2 com2 230400 1    ## 主站和从站之间的通信波特率是230400，同时主站与从站之间的ALIGN结果以1HZ频率输出
+```
+
+其次，通过命令 log comconfig查看com口的配置
+
+![comconfig for rovercom1](imgs/npos/rovercom1_log_comconfig.png "comconfig for rovercom1")
+
+由上图可知，COM2的波特率设置成了230400，发送以下指令
+
+```bash
+log com2 headingext2b onnew
+saveconfig
+```
+
+上面这行指令将rtk从站的位置信息提供给了rtk主站，rtk主站拿到从站的信息后，可以产生ins和rtk之间的align结果，详细的解释如下，
+
+![headingext2](imgs/npos/headingext2.PNG "headingext2")
+
+在日本public road项目里，由于没有从站com1口的授权码，所以在输入 log com2 headingext2b onnew指令之后，仍然没有双天线heading的数据。
+
+
+
+
+
+
 # 坐标系
 
 ## PP7坐标系  /  ins坐标系
@@ -422,6 +538,13 @@ localization/gnss_ntrip_client_node  |  会有对应的gnss_ntrip_client_node.IN
 localization/online_gnss_rtk_node  |  会有对应的online_gnss_rtk_node.INFO log文件
 localization/sensor_fusion_node  |  会有对应的sensor_fusion_node.INFO log文件
 localization/map_registration_node  |  会有对应的map_registration_node.INFO log文件
+
+
+## insalignconfig masterport [roverport] [baudrate] [outputrate]
+
+实际例子：
+
+insalignconfig com2 com2 230400 1
 
 
 
