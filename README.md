@@ -42,10 +42,6 @@ log com1 gprmc ontime 1
 
 ![master com3](imgs/npos/mastercom3_loglist.PNG "master com3")
 
-
-
-
-
 ### 问题1，inspvaxa消息里ins的状态无法到ins_solution_good 和 ins_rtkfixed
 
 ins_solution一直处于 ins_aligning, motion_detect（这是车动起来的标识）, waiting_azimuth（因为双天线的heading始终是0，所以这里显示waiting_azimuth是可以理解的）的状态，就是到不了ins_solution_good的状态。
@@ -54,15 +50,13 @@ position_type则一直是"PSRDIFF"的状态。
 
 先静态，等状态变成"INS_ALIGNMENT_COMPLETE"，然后再绕‘8’字收敛到INS_SOLUTION_GOOD。
 
-有一点需要注意：由于当时双天线的heading始终是0，所以就不能用双天线初始化，需要用自动方式。
-
-
+有一点需要注意：由于当时双天线的heading始终是0，所以就不能用双天线初始化，需要用自动方式。也就是需要运行alignmentmode automatic。
 
 ### 问题2，双天线的heading始终为0
 
 ![heading3A is 0](imgs/npos/dualantenna_heading_is_always_0.png "heading3A is 0")
 
-当遇到这个问题的时候，首先要用从站com1替换主站com1，连接到IPC的com2口，然后输以下3个命令来查看从站com1的三个方面的信息，
+当遇到这个问题的时候，首先要用从站com1替换主站com1，连接到IPC的com2口，然后输以下3个命令来查看从站com1的两个方面的信息，
 
 第一方面，查看授权码
 
